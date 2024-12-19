@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ettarra Coffee House - Manual Staff Ratings Entry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Manual Staff Ratings Entry</h1>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="entry-controls">
+            <label for="staff_count">Number of Staff:</label>
+            <input type="number" id="staff_count" min="1" max="20" value="1">
+            <button onclick="generateForm()">Generate Form</button>
+        </div>
+
+        <form id="ratings-form" method="post" class="ratings-form">
+            <div id="form-content"></div>
+            <div class="form-buttons">
+                <button type="submit" name="submit">Process Ratings</button>
+                <button type="submit" name="export_excel">Export to Excel</button>
+            </div>
+        </form>
+
+        <a href="{{ url_for('upload_file') }}" class="button">Back to File Upload</a>
+    </div>
+
+    <script>
+        function generateForm() {
+            const staffCount = document.getElementById('staff_count').value;
+            const formContent = document.getElementById('form-content');
+            formContent.innerHTML = '';
+
+            // Add hidden input for staff count
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'staff_count';
+            hiddenInput.value = staffCount;
+            formContent.appendChild(hiddenInput);
+
+            // Create table for ratings
+            const table = document.createElement('table');
+            table.className = 'ratings-table';
+
+            // Header row with names
+            const headerRow = document.createElement('tr');
+            headerRow.appendChild(document.createElement('th')); // Empty corner cell
+            
+            for (let i = 0; i < staffCount; i++) {
+                const nameHeader = document.createElement('th');
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.name = `name_${i}`;
+                nameInput.required = true;
+                nameInput.placeholder = `Staff ${i + 1}`;
+                nameHeader.appendChild(nameInput);
+                headerRow.appendChild(nameHeader);
+            }
+            table.appendChild(headerRow);
+
+            // Rating rows
+            for (let i = 0; i < staffCount; i++) {
+                const row = document.createElement('tr');
+                
+                // Row header (staff name)
+                const rowHeader = document.createElement('th');
+                rowHeader.textContent = `Staff ${i + 1} rates:`;
+                row.appendChild(rowHeader);
+
+                // Rating inputs
+                for (let j = 0; j < staffCount; j++) {
+                    const cell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = `rating_${i}_${j}`;
+                    input.min = '0';
+                    input.max = '10';
+                    input.step = '0.1';
+                    input.required = true;
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            formContent.appendChild(table);
+        }
+    </script>
+</body>
+</html> 
