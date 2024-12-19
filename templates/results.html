@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ettarra Coffee House - Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Staff Ratings Results</h1>
+        
+        <div class="results-container">
+            <h2>Staff Rankings</h2>
+            {% for table in tables %}
+                {{ table | safe }}
+            {% endfor %}
+        </div>
+
+        <div class="visualization-container">
+            <h2>Performance Visualization</h2>
+            <img src="data:image/png;base64,{{ plot }}" alt="Staff Rankings Visualization">
+        </div>
+
+        <a href="{{ url_for('upload_file') }}" class="button">Upload Another File</a>
+    </div>
+</body>
+</html> 
