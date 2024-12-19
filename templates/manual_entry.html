@@ -3,6 +3,7 @@
 <head>
     <title>Ettarra Coffee House - Manual Staff Ratings Entry</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div class="container">
@@ -19,10 +20,16 @@
         <div class="entry-controls">
             <label for="staff_count">Number of Staff:</label>
             <input type="number" id="staff_count" min="1" max="20" value="1">
-            <button onclick="generateForm()">Generate Form</button>
+            <button onclick="generateNameForm()">Enter Names</button>
         </div>
 
-        <form id="ratings-form" method="post" class="ratings-form">
+        <div id="name-form-container" style="display: none;">
+            <h3>Enter Staff Names</h3>
+            <div id="name-inputs"></div>
+            <button onclick="generateRatingForm()">Generate Rating Form</button>
+        </div>
+
+        <form id="ratings-form" method="post" class="ratings-form" style="display: none;">
             <div id="form-content"></div>
             <div class="form-buttons">
                 <button type="submit" name="submit">Process Ratings</button>
@@ -34,8 +41,48 @@
     </div>
 
     <script>
-        function generateForm() {
-            const staffCount = document.getElementById('staff_count').value;
+        let staffNames = [];
+
+        function generateNameForm() {
+            const staffCount = parseInt(document.getElementById('staff_count').value);
+            const nameInputs = document.getElementById('name-inputs');
+            nameInputs.innerHTML = '';
+            
+            for (let i = 0; i < staffCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'name-input-group';
+                
+                const label = document.createElement('label');
+                label.textContent = `Staff ${i + 1} Name: `;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `staff_name_${i}`;
+                input.required = true;
+                
+                div.appendChild(label);
+                div.appendChild(input);
+                nameInputs.appendChild(div);
+            }
+            
+            document.getElementById('name-form-container').style.display = 'block';
+            document.getElementById('ratings-form').style.display = 'none';
+        }
+
+        function generateRatingForm() {
+            const staffCount = parseInt(document.getElementById('staff_count').value);
+            staffNames = [];
+            
+            // Collect all names
+            for (let i = 0; i < staffCount; i++) {
+                const nameInput = document.getElementById(`staff_name_${i}`);
+                if (!nameInput.value.trim()) {
+                    alert('Please fill in all names');
+                    return;
+                }
+                staffNames.push(nameInput.value.trim());
+            }
+            
             const formContent = document.getElementById('form-content');
             formContent.innerHTML = '';
 
@@ -46,6 +93,15 @@
             hiddenInput.value = staffCount;
             formContent.appendChild(hiddenInput);
 
+            // Add hidden inputs for names
+            staffNames.forEach((name, index) => {
+                const nameInput = document.createElement('input');
+                nameInput.type = 'hidden';
+                nameInput.name = `name_${index}`;
+                nameInput.value = name;
+                formContent.appendChild(nameInput);
+            });
+
             // Create table for ratings
             const table = document.createElement('table');
             table.className = 'ratings-table';
@@ -54,25 +110,20 @@
             const headerRow = document.createElement('tr');
             headerRow.appendChild(document.createElement('th')); // Empty corner cell
             
-            for (let i = 0; i < staffCount; i++) {
+            staffNames.forEach(name => {
                 const nameHeader = document.createElement('th');
-                const nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.name = `name_${i}`;
-                nameInput.required = true;
-                nameInput.placeholder = `Staff ${i + 1}`;
-                nameHeader.appendChild(nameInput);
+                nameHeader.textContent = name;
                 headerRow.appendChild(nameHeader);
-            }
+            });
             table.appendChild(headerRow);
 
             // Rating rows
-            for (let i = 0; i < staffCount; i++) {
+            staffNames.forEach((name, i) => {
                 const row = document.createElement('tr');
                 
                 // Row header (staff name)
                 const rowHeader = document.createElement('th');
-                rowHeader.textContent = `Staff ${i + 1} rates:`;
+                rowHeader.textContent = `${name} rates:`;
                 row.appendChild(rowHeader);
 
                 // Rating inputs
@@ -85,12 +136,25 @@
                     input.max = '10';
                     input.step = '0.1';
                     input.required = true;
+
+                    // Highlight self-rating cells
+                    if (i === j) {
+                        cell.className = 'self-rating';
+                        input.className = 'self-rating-input';
+                        const selfLabel = document.createElement('div');
+                        selfLabel.className = 'self-rating-label';
+                        selfLabel.textContent = 'Self Rating';
+                        cell.appendChild(selfLabel);
+                    }
+
                     cell.appendChild(input);
                     row.appendChild(cell);
                 }
                 table.appendChild(row);
-            }
+            });
             formContent.appendChild(table);
+            
+            document.getElementById('ratings-form').style.display = 'block';
         }
     </script>
 </body>

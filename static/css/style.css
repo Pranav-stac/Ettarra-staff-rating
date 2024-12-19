@@ -108,4 +108,30 @@ h1 {
 
 .form-buttons button:hover {
     background-color: #0056b3;
+}
+
+.self-rating {
+    background-color: #fff3cd;
+    position: relative;
+    padding-top: 20px !important;
+}
+
+.self-rating-label {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.8em;
+    color: #856404;
+    font-weight: bold;
+}
+
+.self-rating-input {
+    background-color: #fff3cd;
+    border: 2px solid #ffeeba;
+}
+
+.ratings-table td {
+    position: relative;
 } 
