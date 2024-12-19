@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Staff Details - {{ stats.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Staff Details: {{ stats.name }}</h1>
+        
+        <div class="stats-container">
+            <div class="stats-card">
+                <h3>Summary Statistics</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Self Rating</td>
+                        <td>{{ "%.2f"|format(stats.self_rating) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Average Rating Given</td>
+                        <td>{{ "%.2f"|format(stats.average_rating_given) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Average Rating Received</td>
+                        <td>{{ "%.2f"|format(stats.average_rating_received) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Elo Rating</td>
+                        <td>{{ "%.1f"|format(stats.elo_rating) }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="ratings-details">
+                <h3>Ratings Given to Others</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Staff Member</th>
+                        <th>Rating Given</th>
+                        <th>Reason</th>
+                    </tr>
+                    {% for rating in stats.ratings_given_details %}
+                    <tr>
+                        <td>{{ rating.name }}</td>
+                        <td>{{ "%.1f"|format(rating.rating) }}</td>
+                        <td>{{ rating.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h3>Ratings Received from Others</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Staff Member</th>
+                        <th>Rating Received</th>
+                        <th>Reason</th>
+                    </tr>
+                    {% for rating in stats.ratings_received_details %}
+                    <tr>
+                        <td>{{ rating.name }}</td>
+                        <td>{{ "%.1f"|format(rating.rating) }}</td>
+                        <td>{{ rating.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <h2>Performance Analysis</h2>
+            <img src="data:image/png;base64,{{ plot }}" alt="Staff Performance Analysis">
+        </div>
+
+        <a href="{{ url_for('show_results') }}" class="button">Back to Results</a>
+    </div>
+</body>
+</html> 

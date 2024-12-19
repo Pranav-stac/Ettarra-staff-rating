@@ -10,9 +10,30 @@
         
         <div class="results-container">
             <h2>Staff Rankings</h2>
-            {% for table in tables %}
-                {{ table | safe }}
-            {% endfor %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Elo Rating</th>
+                        <th>Self Rating</th>
+                        <th>Others Average Rating</th>
+                        <th>Difference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in results_data %}
+                    <tr>
+                        <td>{{ row.Rank }}</td>
+                        <td><a href="{{ url_for('staff_details', name=row.Name) }}">{{ row.Name }}</a></td>
+                        <td>{{ "%.1f"|format(row.EloRating) }}</td>
+                        <td>{{ "%.1f"|format(row.SelfRating) }}</td>
+                        <td>{{ "%.1f"|format(row.OthersAverageRating) }}</td>
+                        <td>{{ "%.1f"|format(row.Difference) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
         <div class="visualization-container">
@@ -20,7 +41,11 @@
             <img src="data:image/png;base64,{{ plot }}" alt="Staff Rankings Visualization">
         </div>
 
-        <a href="{{ url_for('upload_file') }}" class="button">Upload Another File</a>
+        <div class="button-group">
+            <a href="{{ url_for('manual_entry') }}" class="button">New Manual Entry</a>
+            <a href="{{ url_for('upload_file') }}" class="button">Upload New File</a>
+            <a href="{{ url_for('show_results') }}" class="button">Back to Results</a>
+        </div>
     </div>
 </body>
 </html> 

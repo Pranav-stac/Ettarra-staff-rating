@@ -1,161 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ettarra Coffee House - Manual Staff Ratings Entry</title>
+    <title>Ettarra Coffee House - Staff Ratings Entry</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div class="container">
-        <h1>Manual Staff Ratings Entry</h1>
+        <h1>Staff Ratings Entry</h1>
         
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="entry-controls">
-            <label for="staff_count">Number of Staff:</label>
-            <input type="number" id="staff_count" min="1" max="20" value="1">
-            <button onclick="generateNameForm()">Enter Names</button>
-        </div>
-
-        <div id="name-form-container" style="display: none;">
-            <h3>Enter Staff Names</h3>
-            <div id="name-inputs"></div>
-            <button onclick="generateRatingForm()">Generate Rating Form</button>
-        </div>
-
-        <form id="ratings-form" method="post" class="ratings-form" style="display: none;">
-            <div id="form-content"></div>
-            <div class="form-buttons">
-                <button type="submit" name="submit">Process Ratings</button>
-                <button type="submit" name="export_excel">Export to Excel</button>
+        {% if step == 'initial' %}
+        <form method="POST" action="{{ url_for('manual_entry') }}">
+            <div class="entry-controls">
+                <label for="staff_count">Number of Staff:</label>
+                <input type="number" name="staff_count" min="1" max="20" value="1" required>
+                <button type="submit">Enter Names</button>
             </div>
         </form>
+        
+        {% elif step == 'names' %}
+        <form method="POST" action="{{ url_for('submit_names') }}">
+            <h3>Enter Staff Names</h3>
+            {% for i in range(staff_count) %}
+            <div class="name-input-group">
+                <label>Staff {{ i + 1 }} Name:</label>
+                <input type="text" name="name_{{ i }}" required>
+            </div>
+            {% endfor %}
+            <button type="submit">Start Rating Process</button>
+        </form>
+        
+        {% elif step == 'rating' %}
+        <h3>Current Rater: {{ current_rater }}</h3>
+        <form method="POST" action="{{ url_for('submit_ratings') }}">
+            <div class="self-rating-section">
+                <h4>Your Self Rating</h4>
+                <input type="number" name="self_rating" min="0" max="10" step="0.1" required>
+                <textarea name="self_reason" placeholder="Reason (optional)"></textarea>
+            </div>
 
-        <a href="{{ url_for('upload_file') }}" class="button">Back to File Upload</a>
+            <div class="others-ratings-section">
+                <h4>Rate Other Staff Members</h4>
+                {% for name in other_staff %}
+                <div class="rating-group">
+                    <h5>{{ name }}</h5>
+                    <input type="number" name="rating_{{ name }}" min="0" max="10" step="0.1" required>
+                    <textarea name="reason_{{ name }}" placeholder="Reason (optional)"></textarea>
+                </div>
+                {% endfor %}
+            </div>
+
+            <input type="hidden" name="current_rater" value="{{ current_rater }}">
+            <button type="submit">Submit Ratings</button>
+        </form>
+        {% endif %}
     </div>
-
-    <script>
-        let staffNames = [];
-
-        function generateNameForm() {
-            const staffCount = parseInt(document.getElementById('staff_count').value);
-            const nameInputs = document.getElementById('name-inputs');
-            nameInputs.innerHTML = '';
-            
-            for (let i = 0; i < staffCount; i++) {
-                const div = document.createElement('div');
-                div.className = 'name-input-group';
-                
-                const label = document.createElement('label');
-                label.textContent = `Staff ${i + 1} Name: `;
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.id = `staff_name_${i}`;
-                input.required = true;
-                
-                div.appendChild(label);
-                div.appendChild(input);
-                nameInputs.appendChild(div);
-            }
-            
-            document.getElementById('name-form-container').style.display = 'block';
-            document.getElementById('ratings-form').style.display = 'none';
-        }
-
-        function generateRatingForm() {
-            const staffCount = parseInt(document.getElementById('staff_count').value);
-            staffNames = [];
-            
-            // Collect all names
-            for (let i = 0; i < staffCount; i++) {
-                const nameInput = document.getElementById(`staff_name_${i}`);
-                if (!nameInput.value.trim()) {
-                    alert('Please fill in all names');
-                    return;
-                }
-                staffNames.push(nameInput.value.trim());
-            }
-            
-            const formContent = document.getElementById('form-content');
-            formContent.innerHTML = '';
-
-            // Add hidden input for staff count
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'staff_count';
-            hiddenInput.value = staffCount;
-            formContent.appendChild(hiddenInput);
-
-            // Add hidden inputs for names
-            staffNames.forEach((name, index) => {
-                const nameInput = document.createElement('input');
-                nameInput.type = 'hidden';
-                nameInput.name = `name_${index}`;
-                nameInput.value = name;
-                formContent.appendChild(nameInput);
-            });
-
-            // Create table for ratings
-            const table = document.createElement('table');
-            table.className = 'ratings-table';
-
-            // Header row with names
-            const headerRow = document.createElement('tr');
-            headerRow.appendChild(document.createElement('th')); // Empty corner cell
-            
-            staffNames.forEach(name => {
-                const nameHeader = document.createElement('th');
-                nameHeader.textContent = name;
-                headerRow.appendChild(nameHeader);
-            });
-            table.appendChild(headerRow);
-
-            // Rating rows
-            staffNames.forEach((name, i) => {
-                const row = document.createElement('tr');
-                
-                // Row header (staff name)
-                const rowHeader = document.createElement('th');
-                rowHeader.textContent = `${name} rates:`;
-                row.appendChild(rowHeader);
-
-                // Rating inputs
-                for (let j = 0; j < staffCount; j++) {
-                    const cell = document.createElement('td');
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.name = `rating_${i}_${j}`;
-                    input.min = '0';
-                    input.max = '10';
-                    input.step = '0.1';
-                    input.required = true;
-
-                    // Highlight self-rating cells
-                    if (i === j) {
-                        cell.className = 'self-rating';
-                        input.className = 'self-rating-input';
-                        const selfLabel = document.createElement('div');
-                        selfLabel.className = 'self-rating-label';
-                        selfLabel.textContent = 'Self Rating';
-                        cell.appendChild(selfLabel);
-                    }
-
-                    cell.appendChild(input);
-                    row.appendChild(cell);
-                }
-                table.appendChild(row);
-            });
-            formContent.appendChild(table);
-            
-            document.getElementById('ratings-form').style.display = 'block';
-        }
-    </script>
 </body>
 </html> 
