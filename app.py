@@ -17,6 +17,7 @@ app.secret_key = 'ettarra_coffee_house_2024'
 def init_db():
     conn = sqlite3.connect('ratings.db')
     c = conn.cursor()
+    
     # Create tables
     c.execute('''CREATE TABLE IF NOT EXISTS ratings_sessions
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -485,6 +486,54 @@ def debug_table():
     <br>
     Sample link: {url_for('staff_details', name=session['staff_names'][0])}
     """
+
+@app.route('/past-sessions')
+def past_sessions():
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        
+        # Get all sessions with basic stats
+        c.execute('''
+            SELECT 
+                rs.session_id,
+                rs.created_at,
+                rs.is_manual,
+                COUNT(DISTINCT rd.staff_name) as staff_count,
+                MIN(rd.rank) as top_rank,
+                MAX(rd.rank) as bottom_rank
+            FROM ratings_sessions rs
+            JOIN ratings_data rd ON rs.session_id = rd.session_id
+            GROUP BY rs.session_id
+            ORDER BY rs.created_at DESC
+        ''')
+        
+        sessions = []
+        for row in c.fetchall():
+            # Get top performer
+            c.execute('''
+                SELECT staff_name, elo_rating 
+                FROM ratings_data 
+                WHERE session_id = ? AND rank = ?
+            ''', (row['session_id'], row['top_rank']))
+            top_performer = c.fetchone()
+            
+            sessions.append({
+                'id': row['session_id'],
+                'date': datetime.strptime(row['created_at'], '%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d %H:%M'),
+                'type': 'Manual Entry' if row['is_manual'] else 'File Upload',
+                'staff_count': row['staff_count'],
+                'top_performer': top_performer['staff_name'],
+                'top_rating': round(top_performer['elo_rating'], 1)
+            })
+        
+        conn.close()
+        return render_template('past_sessions.html', sessions=sessions)
+        
+    except Exception as e:
+        logging.error(f"Error loading past sessions: {e}")
+        flash('Error loading session history')
+        return redirect(url_for('upload_file'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=6060, debug=True)

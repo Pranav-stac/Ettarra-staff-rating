@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ettarra Coffee House - Past Sessions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Past Rating Sessions</h1>
+        
+        <div class="sessions-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Staff Count</th>
+                        <th>Top Performer</th>
+                        <th>Top Rating</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td>{{ session.date }}</td>
+                        <td>{{ session.type }}</td>
+                        <td>{{ session.staff_count }}</td>
+                        <td>{{ session.top_performer }}</td>
+                        <td>{{ session.top_rating }}</td>
+                        <td>
+                            <a href="{{ url_for('show_results', session_id=session.id) }}" 
+                               class="button">View Results</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="button-group">
+            <a href="{{ url_for('upload_file') }}" class="button">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html> 
